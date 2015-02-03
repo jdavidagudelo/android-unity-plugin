@@ -1,11 +1,31 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="udea.telesalud.artica.com.myapplication">
-
+    package="udea.telesalud.artica.com.plugin">
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@drawable/ic_launcher"
         android:theme="@style/AppTheme">
+        <activity android:name="com.unity3d.player.UnityPlayerActivity" android:label="@string/app_name" android:configChanges="fontScale|keyboard|keyboardHidden|locale|mnc|mcc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|touchscreen" android:screenOrientation="fullSensor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+            <meta-data android:name="unityplayer.ForwardNativeEventsToDalvik" android:value="false" />
+        </activity>
+        <activity android:name=".NotificationOne"
+            android:label="Details of Notification One">
+        </activity>
+        <activity android:name=".NotificationTwo"
+            android:label="Details of Notification Two">
+        </activity>
+        <service android:name=".MyService" android:exported="false">
+        </service>
     </application>
 
 </manifest>
+
+
