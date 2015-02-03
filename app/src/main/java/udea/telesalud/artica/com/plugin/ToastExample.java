@@ -70,8 +70,11 @@ public class ToastExample {
     }
     public void showMessage(String message) {
         Toast.makeText(this.context, message, Toast.LENGTH_SHORT).show();
-        context.startService(new Intent(context, MyService.class));
-        sendNotification();
+        callAlarmService();
+    }
+    public void callAlarmService()
+    {
+        context.startService(new Intent(context, AlarmService.class));
     }
 
     protected void displayNotificationOne() {

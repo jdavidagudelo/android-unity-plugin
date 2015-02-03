@@ -2,6 +2,9 @@
     package="udea.telesalud.artica.com.plugin">
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@drawable/ic_launcher"
@@ -23,7 +26,22 @@
             android:label="Details of Notification Two">
         </activity>
         <service android:name=".MyService" android:exported="false">
+
         </service>
+        <service android:name=".AlarmService" android:exported="false">
+
+        </service>
+        <receiver android:name=".AutoStartReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".AlarmReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="udea.telesalud.artica.com.plugin.START_ALARM" >
+                </action>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
