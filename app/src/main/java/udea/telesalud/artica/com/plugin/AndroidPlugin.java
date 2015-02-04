@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
@@ -152,7 +153,7 @@ public class AndroidPlugin {
      *
      * @return intent utilizado para redirigir las notificaciones del usuario hacia el activity principal del juego.
      */
-    private Intent getNewBaseIntent() {
+    public Intent getNewBaseIntent() {
         return new Intent(context, NotificationOpenedActivity.class).addFlags(603979776);
     }
 
@@ -163,6 +164,9 @@ public class AndroidPlugin {
         if (context == null) {
             return;
         }
+        Vibrator v = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
+        // Vibrate for 500 milliseconds
+        v.vibrate(500);
         Resources res = context.getResources();
         // Invoking the default notification service
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);

@@ -3,7 +3,6 @@ package udea.telesalud.artica.com.plugin;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -12,9 +11,11 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
+import java.util.Random;
+
 public class MyService extends Service {
 
-    private NotificationManager mNM;
+    private NotificationManager notificationManager;
 
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
@@ -34,7 +35,7 @@ public class MyService extends Service {
 
     @Override
     public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
@@ -50,7 +51,7 @@ public class MyService extends Service {
     @Override
     public void onDestroy() {
         // Cancel the persistent notification.
-        mNM.cancel(NOTIFICATION);
+        notificationManager.cancel(NOTIFICATION);
 
         // Tell the user we stopped.
         Toast.makeText(this,"Service stopped", Toast.LENGTH_SHORT).show();
@@ -80,7 +81,7 @@ public class MyService extends Service {
         }
         Resources res = context.getResources();
         // Invoking the default notification service
-        NotificationCompat.Builder  mBuilder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
         mBuilder.setContentTitle("New Message with explicit intent");
         mBuilder.setContentText("New message from javacodegeeks received");
         mBuilder.setTicker("Explicit: New Message Received!");
@@ -89,23 +90,14 @@ public class MyService extends Service {
         // Increase notification number every time a new notification arrives
         mBuilder.setNumber(numMessagesOne);
         numMessagesOne++;
-        // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(context, NotificationOne.class);
-        resultIntent.putExtra("notificationId", NOTIFICATION);
-        //This ensures that navigating backward from the Activity leads out of the app to Home page
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-        // Adds the back stack for the Intent
-        stackBuilder.addParentStack(NotificationOne.class);
-        // Adds the Intent that starts the Activity to the top of the stack
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_ONE_SHOT
-                );
+        Random random = new Random();
+        int notificationId = random.nextInt();
+        int intentId = random.nextInt();
+        PendingIntent contentIntent = PendingIntent.getActivity(context, intentId, AndroidPlugin.instance().getNewBaseIntent().putExtra("notificationId", notificationId), PendingIntent.FLAG_ONE_SHOT);
         // start the activity when the user clicks the notification text
-        mBuilder.setContentIntent(resultPendingIntent);
+        mBuilder.setContentIntent(contentIntent);
+        NotificationManager myNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         // pass the Notification object to the system
-        mNM.notify(NOTIFICATION, mBuilder.build());
+        myNotificationManager.notify(notificationId, mBuilder.build());
     }
 }
