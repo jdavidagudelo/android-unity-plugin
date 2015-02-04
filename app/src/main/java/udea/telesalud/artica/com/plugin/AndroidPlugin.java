@@ -17,74 +17,155 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
-public class ToastExample {
+import java.util.Random;
 
+/**
+ * Clase utilizada para acceso al GPS, las notificaciones y las alarmas de android
+ * desde una aplicacion Unity.
+ */
+public class AndroidPlugin {
+
+    private boolean mIsBound = false;
+    private MyService mBoundService;
+    /**
+     * Contexto de la aplicacion, en unity corresponde a la actividad principal.
+     */
     private Context context;
+    /**
+     * Ultima ubicacion conocida del sujeto.
+     */
     private Location lastLocation = null;
-    private LocationManager myLocationManager;
+    /**
+     * Encargado de manejar el acceso a la ubicacion del dispositivo.
+     */
+    private LocationManager customLocationManager;
+    /**
+     * Proveedor de servicios de ubicacion. Incializado con el GPS.
+     */
     private String PROVIDER = LocationManager.GPS_PROVIDER;
-    private static ToastExample instance;
+    /**
+     * Instancia usada para manejar una unica instancia de la clase durante la ejecucion del programa.
+     */
+    private static AndroidPlugin instance;
+    /**
+     * Distancia acumulada del recorrido en metros.
+     */
     private float distance = 0;
+    /**
+     * Tiempo acumulado del recorrido en milisegundos.
+     */
     private long time = 0;
+    /**
+     * Tiempo actual.
+     */
     private long currentTime = 0;
+    /**
+     * Numero de mensajes enviados en la notificacion 1.
+     */
     private static int numMessagesOne = 1;
+    /**
+     * Numero de mensajes enviados en la notificacion 2.
+     */
     private static int numMessagesTwo = 1;
-    private int notificationIdOne = 111;
     private int notificationIdTwo = 112;
-    public ToastExample() {
-        ToastExample.instance = this;
+
+    /**
+     * Constructor.
+     */
+    private AndroidPlugin() {
+        AndroidPlugin.instance = this;
     }
-    public static ToastExample instance() {
-        if(instance == null) {
-            instance = new ToastExample();
+
+    public static AndroidPlugin instance() {
+        if (instance == null) {
+            instance = new AndroidPlugin();
         }
         return instance;
     }
 
+    /**
+     * Inicializa el context de la aplicacion.
+     *
+     * @param context contexto de la aplicacion. Normalmente corresponde a la
+     *                actividad principal de Unity asociada con android.
+     */
     public void setContext(Context context) {
         this.context = context;
         time = System.currentTimeMillis();
-        myLocationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
-        lastLocation = myLocationManager.getLastKnownLocation(PROVIDER);
-        myLocationManager.requestLocationUpdates(
+        customLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        lastLocation = customLocationManager.getLastKnownLocation(PROVIDER);
+        customLocationManager.requestLocationUpdates(
                 PROVIDER,     //provider
                 0,       //minTime
                 0,       //minDistance
                 myLocationListener);
     }
-    public long getCurrentTime()
-    {
-        return  currentTime;
+
+    /**
+     * Tiempo acumulado del recorrido del dispositivo.
+     *
+     * @return tiempo acumulado del recorrido del dispositivo.
+     */
+    public long getCurrentTime() {
+        return currentTime;
     }
-    public String getLocation()
-    {
-        if(lastLocation == null)
-        {
+
+    /**
+     * Ultima ubicacion del dispositivo.
+     *
+     * @return la ultima ubicacion conocida del dispositivo.
+     */
+    public String getLocation() {
+        if (lastLocation == null) {
             return "No location available";
         }
         return lastLocation.toString();
     }
-    public float getCurrentDistance()
-    {
+
+    /**
+     * Permite obtener la distancia acumulada recorrida por el dispositivo.
+     *
+     * @return distancia acumulada recorrida por el dispositivo.
+     */
+    public float getCurrentDistance() {
         return distance;
     }
+
+    /**
+     * @param message
+     */
     public void showMessage(String message) {
         Toast.makeText(this.context, message, Toast.LENGTH_SHORT).show();
-        callAlarmService();
+        //callAlarmService();
+        displayNotificationOne();
     }
-    public void callAlarmService()
-    {
+
+    /**
+     * Permite inicializar el servicio de alarma del dispositivo desde un servicio.
+     */
+    public void callAlarmService() {
         context.startService(new Intent(context, AlarmService.class));
     }
 
+    /**
+     * Intent utilizado para inicializar las notificaciones mostradas en la aplicacion.
+     *
+     * @return intent utilizado para redirigir las notificaciones del usuario hacia el activity principal del juego.
+     */
+    private Intent getNewBaseIntent() {
+        return new Intent(context, NotificationOpenedActivity.class).addFlags(603979776);
+    }
+
+    /**
+     * Metodo usado para mostrar una notificacion de forma inmediata.
+     */
     protected void displayNotificationOne() {
-        if(context == null)
-        {
+        if (context == null) {
             return;
         }
         Resources res = context.getResources();
         // Invoking the default notification service
-        NotificationCompat.Builder  mBuilder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
         mBuilder.setContentTitle("New Message with explicit intent");
         mBuilder.setContentText("New message from javacodegeeks received");
         mBuilder.setTicker("Explicit: New Message Received!");
@@ -93,34 +174,33 @@ public class ToastExample {
         // Increase notification number every time a new notification arrives
         mBuilder.setNumber(numMessagesOne);
         numMessagesOne++;
-        // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(context, NotificationOne.class);
-        resultIntent.putExtra("notificationId", notificationIdOne);
-        //This ensures that navigating backward from the Activity leads out of the app to Home page
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-        // Adds the back stack for the Intent
-        stackBuilder.addParentStack(NotificationOne.class);
-        // Adds the Intent that starts the Activity to the top of the stack
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_ONE_SHOT
-                );
+        Random random = new Random();
+        int notificationId = random.nextInt();
+        int intentId = random.nextInt();
+        PendingIntent contentIntent = PendingIntent.getActivity(context, intentId, getNewBaseIntent().putExtra("notificationId", notificationId), PendingIntent.FLAG_ONE_SHOT);
         // start the activity when the user clicks the notification text
-        mBuilder.setContentIntent(resultPendingIntent);
+        mBuilder.setContentIntent(contentIntent);
         NotificationManager myNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         // pass the Notification object to the system
-        myNotificationManager.notify(notificationIdOne, mBuilder.build());
+        myNotificationManager.notify(notificationId, mBuilder.build());
     }
+
+    /**
+     * Metodo usado para iniciar la actividad principal del juego una vez el usuario hace clic en una notificacion.
+     */
+    public void handleNotificationOpened() {
+        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+        launchIntent.setFlags(131072);
+        context.startActivity(launchIntent);
+    }
+
     protected void displayNotificationTwo() {
-        if(context==null)
-        {
+        if (context == null) {
             return;
         }
         Resources res = context.getResources();
         // Invoking the default notification service
-        NotificationCompat.Builder  mBuilder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
         mBuilder.setContentTitle("New Message with implicit intent");
         mBuilder.setContentText("New message from javacodegeeks received...");
         mBuilder.setTicker("Implicit: New Message Received!");
@@ -160,41 +240,53 @@ public class ToastExample {
         // pass the Notification object to the system
         myNotificationManager.notify(notificationIdTwo, mBuilder.build());
     }
+
+    /**
+     * Metodo usado para reinicializar las variables usadas para medir la distancia, el tiempo y la ubicacion del dispositivo.
+     */
+    public void restartPath() {
+        distance = 0;
+        currentTime = 0;
+        time = System.currentTimeMillis();
+        lastLocation = customLocationManager.getLastKnownLocation(PROVIDER);
+    }
+
+    /**
+     * Listener que se encarga de actualizar la ubicacion, el tiempo y la distancia recorrida por el dispositivo.
+     */
     private LocationListener myLocationListener
-            = new LocationListener(){
+            = new LocationListener() {
 
         @Override
         public void onLocationChanged(Location location) {
             distance += lastLocation.distanceTo(location);
             long actualTime = System.currentTimeMillis();
-            currentTime +=  actualTime - time;
+            currentTime += actualTime - time;
             time = actualTime;
             lastLocation = location;
         }
 
         @Override
         public void onProviderDisabled(String provider) {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void onProviderEnabled(String provider) {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            // TODO Auto-generated method stub
 
-        }};
-    private boolean mIsBound = false;
-    private MyService mBoundService;
-    public void sendNotification()
-    {
+        }
+    };
+
+
+    public void sendNotification() {
         doBindService();
     }
+
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             // This is called when the connection with the service has been
@@ -202,7 +294,7 @@ public class ToastExample {
             // interact with the service.  Because we have bound to a explicit
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
-            mBoundService = ((MyService.LocalBinder)service).getService();
+            mBoundService = ((MyService.LocalBinder) service).getService();
 
             // Tell the user about this for our demo.
             Toast.makeText(context, "Local service connected",

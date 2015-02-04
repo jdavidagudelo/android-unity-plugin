@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="udea.telesalud.artica.com.plugin">
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -25,6 +26,9 @@
         <activity android:name=".NotificationTwo"
             android:label="Details of Notification Two">
         </activity>
+        <activity android:name=".NotificationOpenedActivity"
+            android:label="Notification opened">
+        </activity>
         <service android:name=".MyService" android:exported="false">
 
         </service>
@@ -45,5 +49,3 @@
     </application>
 
 </manifest>
-
-
